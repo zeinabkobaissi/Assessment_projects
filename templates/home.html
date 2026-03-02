@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Books</title>
+
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        h1 { color: #2563eb; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .returned {
+            color: green;
+            font-weight: bold;
+        }
+
+        .borrowed {
+            color: red;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1e40af;
+        }
+    </style>
+
+<script>
+
+async function loadBooks() {
+    const res = await fetch("/books/");
+    const books = await res.json();
+
+    const tbody = document.getElementById("books_tbody");
+    tbody.innerHTML = "";
+
+    books.forEach(book => {
+
+        const statusText = book.is_returned ? 
+            '<span class="returned">Returned</span>' :
+            '<span class="borrowed">Borrowed</span>';
+
+        tbody.innerHTML += `
+        <tr>
+            <td>${book.id}</td>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>
+                <input type="checkbox" 
+                       ${book.is_returned ? "checked" : ""} 
+                       onchange="toggleStatus(${book.id}, this.checked)">
+            </td>
+            <td>${statusText}</td>
+        </tr>
+        `;
+    });
+}
+
+async function toggleStatus(id, isReturned) {
+
+    const res = await fetch(`/books/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            is_returned: isReturned
+        })
+    });
+
+    if (res.ok) {
+        loadBooks();
+    } else {
+        alert("Only admin can update status");
+    }
+}
+
+window.onload = loadBooks;
+
+</script>
+</head>
+
+<body>
+
+<h1>Library Books</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Returned?</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody id="books_tbody">
+    </tbody>
+</table>
+
+</body>
+</html>
